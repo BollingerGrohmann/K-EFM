@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <title>GH UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"> <!-- Link to external CSS -->
+</head>
+
+<body>
+    <header class="logo-container">
+        <img src="Assets/B+G_Logo_Black 1 1.png" alt="Logo">
+    </header>
+
+    <main>
+        <section class="title">
+            <h1> Equivalent Frame Modelling </h1>
+        </section>
+
+        <section class="next-div">
+            <h2 class="sub-header"> Calculate reinforcement for stone masonry</h2>
+            <p>The Equivalent Frame Modelling tool calculates the reinforcement requirements for stone masonry buildings based on the equivalent lateral force method in Eurocode 6 and 8.</p>
+        </section>
+
+        <!-- Navigation bar -->
+        <nav>
+            <a class="nav-item active" id="geometry-tab">Geometry</a>
+            <a class="nav-item" id="material-tab">Material</a>
+            <a class="nav-item" id="load-tab">Load</a>
+            <a class="nav-item" id="geotechnic-tab">Geotechnic</a>
+        </nav>
+
+        <!-- Content Section -->
+        <section class="content" id="content">
+            <!-- Geometry Tab -->
+            <div id="geometry-content" >
+                <p>Create layers to add geometry here.</p>
+                <section class="button-section">
+                    <button id="button-1">
+                        <img src="Assets/Add-Layer-Button.png" alt="Add Layer"> Add Row
+                    </button>
+                    <button id="button-3">
+                        <img src="Assets/Remove-Layer-Button.png" alt="Remove Layer"> Remove Row
+                    </button>
+                </section>
+                <section class="geometry-table-section">
+                    <table id="geometry-table">
+                        <thead>
+                            <tr>
+                                <th>Geometry Name</th>
+                                <th>Thickness</th>
+                                <th>Add Geometry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="geometry-name" placeholder="Enter name" /></td>
+                                <td><input type="number" class="geometry-thickness" placeholder="Enter thickness" /></td>
+                                <td><button class="add-geo">Add Geo</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <!-- Material Tab -->
+            <div id="material-content" style="display: none;">
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls" />
+                <section class="material-manager-section">
+                    <div class="material-header">
+                        <h3>Material Manager</h3>
+                        <button id="add-material-button">+ Add Material</button>
+                    </div>
+                    <div id="material-list">
+                        <!-- Material sections will be dynamically added here -->
+                    </div>
+                </section>
+            </div>
+            
+            <!-- <div id="load-content" style="display: none;">
+                <p>Q
+                    <input type="range" min="0" max="100" class="slider" id="slider1">
+                </p>
+                <p>G1
+                    <input type="range" min="0" max="100" class="slider" id="slider255">
+                </p>
+            </div> -->
+            <div id="load-content" style="display: none;">
+                <div>
+                    <label for="slider1">Q:</label>
+                    <input type="range" id="slider1" min="0" max="100" />
+                </div>
+                <div>
+                    <label for="slider255">G1:</label>
+                    <input type="range" id="slider255" min="0" max="100" />
+                </div>
+            </div>
+            <div id="geotechnic-content" style="display: none;">
+                <p>Geotechnic settings go here.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script> <!-- Link to external JavaScript file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+</body>
+
+</html
