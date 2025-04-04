@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Load materials from Excel file when the material tab is activated
             if (!window.materialsLoaded) {
-                loadMaterialsFromExcel();
+                // loadMaterialsFromExcel();
                 window.materialsLoaded = true;
             }
         });
@@ -381,42 +381,56 @@ document.addEventListener('DOMContentLoaded', function () {
     ///////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////
     
-    // Function to handle file upload and parse the Excel file
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
 
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-
-            // Get the first sheet
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-
-            // Convert sheet to JSON (array of arrays)
-            const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            // Get the first row (field names) and the rest as material data
-            fieldNames = sheetData[0]; // Store the header row
-            materialsData = sheetData.slice(1).map(row => {
-                let material = {};
-                fieldNames.forEach((name, i) => {
-                    material[name] = row[i];
-                });
-                return material;
-            });
+    window.addEventListener('materialDataLoaded', function () {
+        console.log("materialDataLoaded event received from Python");
+        // At this point, Python will have assigned: window.materialData
+        // which should look like { fieldNames: [...], rows: [ {...}, {...}, ... ] }
+        if (window.materialData) {
+            fieldNames = window.materialData.fieldNames || [];
+            materialsData = window.materialData.rows || [];
             console.log("Materials loaded:", materialsData);
-        };
-
-        reader.readAsArrayBuffer(file);
-    }
-
-    // Attach the file upload event listener
-    document.getElementById('excel-file-input').addEventListener('change', handleFileUpload);
-
-
+        }
+    });
     
+    document.getElementById('material-manager-header')
+    .addEventListener('click', function(e) {
+        // Ignore if user clicked the "Add Material" button so it doesn't also toggle
+        if (e.target.id === 'add-material-button') return;
+
+        const managerHeader = e.currentTarget;
+        const isNowExpanding = !managerHeader.classList.contains('expanded');
+
+        // Flip the manager arrow
+        managerHeader.classList.toggle('expanded', isNowExpanding);
+
+        // For each material container:
+        const allMaterialHeaders = document.querySelectorAll('.material-container .material-header');
+        const allMaterialContents = document.querySelectorAll('.material-container .material-content');
+
+        allMaterialHeaders.forEach(h => {
+        if (isNowExpanding) {
+            // expand them
+            h.classList.add('expanded');
+        } else {
+            // collapse them
+            h.classList.remove('expanded');
+        }
+        });
+
+        allMaterialContents.forEach(c => {
+        if (isNowExpanding) {
+            c.style.display = 'block';
+            c.style.maxHeight = '500px';
+            c.classList.add('expanded');
+        } else {
+            c.style.display = 'none';
+            c.style.maxHeight = '0';
+            c.classList.remove('expanded');
+        }
+        });
+    });
+
 
     // Add Material Button Event Listener
     document.getElementById('add-material-button').addEventListener('click', function () {
@@ -440,6 +454,26 @@ document.addEventListener('DOMContentLoaded', function () {
         // Header for the material section
         const materialHeader = document.createElement('div');
         materialHeader.classList.add('material-header');
+
+        materialHeader.addEventListener('click', function() {
+            // If expanded, collapse; if collapsed, expand
+            if (materialHeader.classList.contains('expanded')) {
+              // collapse
+              materialHeader.classList.remove('expanded');
+              materialContent.classList.remove('expanded');
+              // Hide
+              materialContent.style.display = 'none';
+              materialContent.style.maxHeight = '0';
+            } else {
+              // expand
+              materialHeader.classList.add('expanded');
+              materialContent.classList.add('expanded');
+              // Show
+              materialContent.style.display = 'block';
+              // If you want a smooth animation, set max-height to some large number
+              materialContent.style.maxHeight = '500px';
+            }
+          });
     
         // Editable title for the material
         const materialTitleInput = document.createElement('input');
@@ -462,6 +496,8 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = material['Name'];
             materialSelect.appendChild(option);
         });
+
+
     
         // When a material is selected, fill in the properties
         materialSelect.addEventListener('change', function() {
@@ -494,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Container for material properties
         const materialContent = document.createElement('div');
         materialContent.classList.add('material-content');
-        materialContent.style.display = 'block';
+   
     
         // Add inputs for each field in fieldNames
         fieldNames.forEach(function(fieldName) {

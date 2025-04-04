@@ -94,6 +94,9 @@ The tool allows for two modes of interaction with the GH script to input paramet
 
 **Indirect Interaction:**
 
+# To Do:
+[x] Geometry tab - 
+
 # Developer Steps
 1. VS code Intellisense:
     - As we are not running any of the python scripts from within VSC, we only need to reference the stubs files to get the intellisense to work. 

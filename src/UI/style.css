@@ -135,7 +135,7 @@ button.add-geo {
     background-color: #f9f9f9;
 }
 
-.material-header {
+/* .material-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -143,6 +143,29 @@ button.add-geo {
     background-color: #e0e0e0;
     border-radius: 5px;
     cursor: pointer;
+} */
+
+#material-manager-header {
+    position: relative;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+  
+#material-manager-header::after {
+    content: "\25BC";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+    font-size: 12px;
+    color: #333;
+    pointer-events: none;
+}
+  
+/* Flip arrow when "expanded" */
+#material-manager-header.expanded::after {
+    transform: translateY(-50%) rotate(180deg);
 }
 
 .material-header h3 {
@@ -167,22 +190,61 @@ button.add-geo {
 }
 
 /* Style each material container section */
-.material-container {
-    margin-top: 10px;
-    border: 1px solid #dcdcdc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+.material-content {
+    /* start hidden by default */
+    display: none;
+    max-height: 0; 
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
     padding: 10px;
-    max-width: 500px; /* Set maximum width for each container */
-    display: flex;
-    flex-direction: column;
+    border: 1px solid #dcdcdc;
+    background-color: #ffffff;
+    margin-top: 10px;
+    border-radius: 5px;
+    
+    /* Show by default */
+    /* display: block; */
+    /* max-height: none; */
+    /* no need to hide overflow if we’re showing everything */
+    /* overflow: visible;   */
 }
 
-/* Header section within each material container */
+/* Remove or merge the duplicate material-header rules and update to: */
 .material-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px; /* Space between elements */
+    padding: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    gap: 10px;
+    padding-right: 40px; /* Increased to make room for arrow */
+}
+
+/* Update the arrow styling */
+.material-header::after {
+    content: "\25BC"; /* This is the Unicode arrow ▼ */
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+    font-size: 12px;
+    color: #333;
+    pointer-events: none; /* Prevents arrow from interfering with clicks */
+}
+
+/* Rotate arrow when content is expanded */
+.material-header.expanded::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Show material content when expanded */
+.material-content.expanded {
+    display: block;
+    max-height: 500px; 
 }
 
 .material-title-input {
@@ -209,15 +271,6 @@ button.add-geo {
     border-radius: 4px;
     cursor: pointer;
     min-width: 150px; /* Ensures dropdown is not too narrow */
-}
-
-.material-content {
-    padding: 10px;
-    border: 1px solid #dcdcdc;
-    background-color: #ffffff;
-    display: none; /* Initially hidden, shown when expanded */
-    margin-top: 10px;
-    border-radius: 5px;
 }
 
 /* Style each input field inside the material container */

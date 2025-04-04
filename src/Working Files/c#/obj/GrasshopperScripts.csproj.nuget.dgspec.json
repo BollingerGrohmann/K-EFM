@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "restore": {
+    "K:\\2019\\F-19-02_Ferney-Voltaire_Logements_Perraudin\\3_AUTRES\\B+G_Paramétrisation portiques équivalents\\Modèle Rhino+GH\\250122_K-EFM Project\\K-EFM\\src\\Working Files\\c#\\GrasshopperScripts.csproj": {}
+  },
+  "projects": {
+    "K:\\2019\\F-19-02_Ferney-Voltaire_Logements_Perraudin\\3_AUTRES\\B+G_Paramétrisation portiques équivalents\\Modèle Rhino+GH\\250122_K-EFM Project\\K-EFM\\src\\Working Files\\c#\\GrasshopperScripts.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "K:\\2019\\F-19-02_Ferney-Voltaire_Logements_Perraudin\\3_AUTRES\\B+G_Paramétrisation portiques équivalents\\Modèle Rhino+GH\\250122_K-EFM Project\\K-EFM\\src\\Working Files\\c#\\GrasshopperScripts.csproj",
+        "projectName": "GrasshopperScripts",
+        "projectPath": "K:\\2019\\F-19-02_Ferney-Voltaire_Logements_Perraudin\\3_AUTRES\\B+G_Paramétrisation portiques équivalents\\Modèle Rhino+GH\\250122_K-EFM Project\\K-EFM\\src\\Working Files\\c#\\GrasshopperScripts.csproj",
+        "packagesPath": "C:\\Users\\vrajasekar\\.nuget\\packages\\",
+        "outputPath": "K:\\2019\\F-19-02_Ferney-Voltaire_Logements_Perraudin\\3_AUTRES\\B+G_Paramétrisation portiques équivalents\\Modèle Rhino+GH\\250122_K-EFM Project\\K-EFM\\src\\Working Files\\c#\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\vrajasekar\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net452"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net452": {
+            "targetAlias": "net452",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net452": {
+          "targetAlias": "net452",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

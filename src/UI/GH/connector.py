@@ -6,6 +6,7 @@ import Eto.Drawing as drawing
 import scriptcontext as sc
 import json
 import urllib.parse  # Import to handle URL encoding
+import openpyxl
 
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
@@ -58,9 +59,6 @@ class MyComponent:
                 if(obj.NickName == "MyToggle"):
                     obj.ExpireSolution(False)
                     
-
-            
-
         # Define the WebView dialog class
         class WebviewSliderDialog(forms.Form):
             def __init__(self):
@@ -95,6 +93,45 @@ class MyComponent:
                 screen_rect = main_window.Bounds
                 self.Location = drawing.Point((screen_rect.Width - self.ClientSize.Width) // 2 + screen_rect.X,
                                               (screen_rect.Height - self.ClientSize.Height) // 2 + screen_rect.Y)
+                
+            def load_material_excel():
+                try:
+                    # Hard-coded path
+                    excel_path = r"C:\Users\vrajasekar\Downloads\Materials.xlsx"
+
+                    wb = openpyxl.load_workbook(excel_path, data_only=True)
+                    sheet = wb[wb.sheetnames[0]]
+
+                    field_names = []
+                    rows_data = []
+                    row_index = 0
+
+                    for row in sheet.iter_rows(values_only=True):
+                        if row_index == 0:
+                            # First row = column headers
+                            field_names = [str(x) for x in row if x is not None]
+                        else:
+                            row_dict = {}
+                            # Populate row_dict by matching each cell to the correct field name
+                            for i, col_name in enumerate(field_names):
+                                row_dict[col_name] = row[i] if (i < len(row)) else None
+                            rows_data.append(row_dict)
+                        row_index += 1
+
+                    # The shape your JS code expects
+                    material_data = {
+                        "fieldNames": field_names,
+                        "rows": rows_data
+                    }
+
+                    # Store in sticky so we can retrieve it inside on_document_loaded
+                    sc.sticky["my_material_data"] = material_data
+
+                except Exception as ex:
+                    print("Error reading Excel file:", ex)
+                    sc.sticky["my_material_data"] = None
+            
+            load_material_excel() 
             
             # Inject JavaScript to handle initialization if needed
             def on_document_loaded(self, sender, e):
@@ -144,6 +181,26 @@ class MyComponent:
                     print("Executing js_script:", js_script)
                     sender.ExecuteScript(js_script)
 
+                    # 2) Get your stored Excel data from sc.sticky
+                    material_data = sc.sticky.get("my_material_data", None)
+                    if material_data is not None:
+                        # Convert to JSON
+                        mat_json = json.dumps(material_data)
+                        # Use the same pattern you do for geometry injection
+                        js_script += f"""
+                            window.materialData = {mat_json};
+                            window.dispatchEvent(new Event('materialDataLoaded'));
+                        """
+                    else:
+                        # If there's no data, we can at least set an empty structure
+                        js_script += """
+                            window.materialData = { fieldNames: [], rows: [] };
+                            window.dispatchEvent(new Event('materialDataLoaded'));
+                        """
+
+                    print("Executing js_script:", js_script)
+                    sender.ExecuteScript(js_script)
+
 
                 except Exception as ex:
                     print("Error in on_document_loaded:", ex)    
@@ -164,9 +221,11 @@ class MyComponent:
                     sender.ExecuteScript(js_script)
                 except Exception as ex:
                     print("Error in on_document_loaded:", ex) '''
+                
 
             # Handle custom navigation events from JavaScript
             def on_document_loading(self, sender, e):
+
                 if e.Uri.Scheme == "sliderupdate":
                     e.Cancel = True
                     value = e.Uri.Query.strip('?')
