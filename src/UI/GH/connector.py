@@ -139,19 +139,7 @@ class MyComponent:
                     # Start building the js_script
                     js_script = "localStorage.clear();"
 
-                    # # Always set elementsData, even if empty
-                    # elements = sc.sticky.get("elements", [])
-                    # elements_json = json.dumps([element.__dict__ for element in elements], ensure_ascii=False)
-                    # js_script += f"""
-                    #     var elementsData = {elements_json};
-                    #     localStorage.setItem('elementsList', JSON.stringify(elementsData));
-                    #     window.dispatchEvent(new Event('elementsLoaded'));
-                    # """
-                    # # Execute the complete script
-                    # print("Executing js_script:", js_script)
-                    # sender.ExecuteScript(js_script)
-
-                    # >>> Use EFM instead of "elements" <<<
+                    # 1) Elements injection
                     EFM = sc.sticky.get("EFM", {})
                     if "GeomDict" in EFM and "Elements" in EFM["GeomDict"]:
                         # Elements is now a list of dicts, e.g. [{ "name": ..., "thickness": ..., "geometries": ... }, ...]
@@ -177,11 +165,10 @@ class MyComponent:
                         localStorage.setItem('elementsList', JSON.stringify(elementsData));
                         window.dispatchEvent(new Event('elementsLoaded'));
                     """
-
                     print("Executing js_script:", js_script)
                     sender.ExecuteScript(js_script)
 
-                    # 2) Get your stored Excel data from sc.sticky
+                    # 2) Excel data injection
                     material_data = sc.sticky.get("my_material_data", None)
                     if material_data is not None:
                         # Convert to JSON
@@ -197,31 +184,24 @@ class MyComponent:
                             window.materialData = { fieldNames: [], rows: [] };
                             window.dispatchEvent(new Event('materialDataLoaded'));
                         """
-
-                    print("Executing js_script:", js_script)
-                    sender.ExecuteScript(js_script)
-
-
-                except Exception as ex:
-                    print("Error in on_document_loaded:", ex)    
-
-                ''' try:
-                    # Get the material data from sticky
-                    material_data = sc.sticky.get("material_data", {"families": [], "material_data": {}})
-
-                    # Convert to JSON format
-                    material_data_json = json.dumps(material_data, ensure_ascii=False)
-
-                    # Inject JavaScript code to use the material data
-                    js_script = f"""
-                        window.materialData = {material_data_json};
-                        window.dispatchEvent(new Event('materialDataLoaded'));
+                    
+                    # 3) Stored materials from EFM["MatDict"]["Materials"]
+                    mat_list = []
+                    EFM = sc.sticky.get("EFM", {})
+                    if "MatDict" in EFM and "Materials" in EFM["MatDict"]:
+                        mat_list = EFM["MatDict"]["Materials"]
+                    # Convert them to JSON. Might want to do a minimal "cleaning" if any invalid data
+                    materials_json = json.dumps(mat_list, ensure_ascii=False)
+                    js_script += f"""
+                    // We'll store in localStorage or a global so the script can restore:
+                    localStorage.setItem('materialsList', JSON.stringify({materials_json}));
+                    window.dispatchEvent(new Event('materialsLoaded'));
                     """
                     print("Executing js_script:", js_script)
                     sender.ExecuteScript(js_script)
+
                 except Exception as ex:
-                    print("Error in on_document_loaded:", ex) '''
-                
+                    print("Error in on_document_loaded:", ex)    
 
             # Handle custom navigation events from JavaScript
             def on_document_loading(self, sender, e):
@@ -241,12 +221,6 @@ class MyComponent:
                         name = System.Uri.UnescapeDataString(name_thickness[0])
                         thickness = float(name_thickness[1])
                         surfaces = get_surfaces()
-
-                        # if surfaces:
-                        #     element = Element(name, surfaces, thickness)
-                        #     add_or_update_element(element)
-                        #     schedule_recompute()
-                        #     self.BringToFront()  # Bring the form back to the foreground
 
                         if surfaces:
                             # Access EFM from sticky
@@ -331,11 +305,6 @@ class MyComponent:
                                     new_elem["geometries"] = []
                                     merged_list.append(new_elem)
 
-                            # OPTIONAL: If you want to remove elements that are
-                            #           NOT in new_elements, do NOT add them to merged_list.
-                            #           If you want to keep them, you can loop over old_elements
-                            #           and append any that weren't matched.
-
                             # Overwrite old list with the newly merged version
                             EFM["GeomDict"]["Elements"] = merged_list
 
@@ -370,6 +339,54 @@ class MyComponent:
                         refresh_sender()
                     else:
                         print("Invalid delete element parameters.")
+
+                if e.Uri.Scheme == "updatematerials":
+                    e.Cancel = True  # block actual navigation
+                    try:
+                        query = e.Uri.Query.strip('?')
+                        params = dict(item.split('=') for item in query.split('&'))
+                        encoded_data = params.get('data', '')
+
+                        if encoded_data:
+                            # 1) Parse JSON from the browser
+                            mat_json = System.Uri.UnescapeDataString(encoded_data)
+                            new_mat_dict = json.loads(mat_json)  
+
+                            # 2) Get or create EFM["MatDict"]
+                            EFM = sc.sticky.get("EFM", {})
+                            if "MatDict" not in EFM:
+                                EFM["MatDict"] = {}
+                            if "Materials" not in EFM["MatDict"]:
+                                EFM["MatDict"]["Materials"] = []
+
+                            old_materials = EFM["MatDict"]["Materials"]
+                            new_materials = new_mat_dict["MatDict"]["Materials"]
+
+                            # 3) Merge them. For each new material, see if old one exists and update it
+                            merged_list = []
+                            for new_mat in new_materials:
+                                matched_old = None
+                                for old_mat in old_materials:
+                                    if old_mat["name"] == new_mat["name"]:
+                                        matched_old = old_mat
+                                        break
+                                if matched_old:
+                                    # update existing
+                                    for k, v in new_mat.items():
+                                        matched_old[k] = v
+                                    merged_list.append(matched_old)
+                                else:
+                                    # brand new
+                                    merged_list.append(new_mat)
+
+                            EFM["MatDict"]["Materials"] = merged_list
+                            sc.sticky["EFM"] = EFM
+
+                            # optionally:
+                            schedule_recompute()
+
+                    except Exception as ex:
+                        print("Error updating materials (EFM):", ex)
 
                 
 

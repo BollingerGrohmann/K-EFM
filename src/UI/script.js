@@ -239,17 +239,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // function sendUpdatedElementsToPython() {
-    //     // Rebuild the entire elementsList from localStorage or from memory:
-    //     // (If your local `elementsList` is always in sync, you can just do this)
-    //     const elementsJson = JSON.stringify(elementsList);
-    
-    //     // Construct a special URL that triggers the "updateelements" event
-    //     // in the Python code:
-    //     window.location.href = 
-    //         "updateelements:update?data=" + encodeURIComponent(elementsJson);
-    // }
-
     function sendUpdatedElementsToPython() {
         const EFM = {
             GeomDict: {
@@ -392,7 +381,55 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("Materials loaded:", materialsData);
         }
     });
+
+    // Listen for the stored material objects from EFM["MatDict"]["Materials"]
+    // We'll store them in localStorage as 'materialsList', then rebuild the UI if needed
+    window.addEventListener('materialsLoaded', function () {
+        console.log("materialsLoaded event from Python");
+        const stored = localStorage.getItem('materialsList');
+        if (stored) {
+            try {
+                materialsList = JSON.parse(stored);
+                console.log("materialsList loaded from localStorage:", materialsList);
+
+                // Rebuild the existing UI from materialsList if you want them displayed immediately
+                rebuildMaterialsUI();
+            } 
+            catch (err) {
+                console.error("Error parsing materialsList from localStorage:", err);
+                materialsList = [];
+            }
+        }
+    });
+
+    // Rebuild the UI from materialsList
+    function rebuildMaterialsUI() {
+        // Clear existing
+        const materialListDiv = document.getElementById('material-list');
+        materialListDiv.innerHTML = "";
+
+        // For each material in materialsList, create a container
+        materialsList.forEach((matItem, index) => {
+            addMaterialSection(matItem, index);
+        });
+    }
+
+     // ANY expanded => arrow is expanded. If none => arrow is collapsed.
+    function updateGlobalArrowState() {
+        const managerHeader = document.getElementById('material-manager-header');
+        const allHeaders = document.querySelectorAll('.material-container .material-header');
+
+        let anyExpanded = false;
+        allHeaders.forEach(h => {
+            if (h.classList.contains('expanded')) {
+                anyExpanded = true;
+            }
+        });
+        // If ANY is expanded => arrow gets .expanded
+        managerHeader.classList.toggle('expanded', anyExpanded);
+    }
     
+    // Global collapse/expand
     document.getElementById('material-manager-header')
     .addEventListener('click', function(e) {
         // Ignore if user clicked the "Add Material" button so it doesn't also toggle
@@ -432,25 +469,41 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // Add Material Button Event Listener
+    // Add Material 
     document.getElementById('add-material-button').addEventListener('click', function () {
         if (materialsData.length > 0) {
-            addMaterialSection();
+            // Create a new blank material entry in materialsList
+            const newMaterial = { 
+                name: "NewMaterial" + (materialsList.length + 1), 
+                // family: "", 
+                // e: "", 
+                // etc. fill in your fields
+            };
+            materialsList.push(newMaterial);
+            
+            // Build the UI
+            addMaterialSection(newMaterial, materialsList.length - 1);
+            // Save + push to Python
+            saveMaterialsToLocalStorage();
+            sendUpdatedMaterialsToPython();
+            
+            // addMaterialSection();
+
         } else {
             alert('Please upload a materials Excel file first.');
         }
     });
 
     // Function to Add Material Section with dropdown and auto-fill functionality
-    function addMaterialSection() {
+    function addMaterialSection(matItem, materialIndex) {
         const materialList = document.getElementById('material-list');
-        const materialIndex = materialList.childElementCount + 1;
+
     
         // Main container for the material section
         const materialContainer = document.createElement('div');
         materialContainer.classList.add('material-container');
         materialContainer.setAttribute('data-material-index', materialIndex);
-    
+            
         // Header for the material section
         const materialHeader = document.createElement('div');
         materialHeader.classList.add('material-header');
@@ -470,15 +523,17 @@ document.addEventListener('DOMContentLoaded', function () {
               materialContent.classList.add('expanded');
               // Show
               materialContent.style.display = 'block';
-              // If you want a smooth animation, set max-height to some large number
               materialContent.style.maxHeight = '500px';
             }
-          });
+            updateGlobalArrowState();  // <-- ADD THIS
+        });
+
     
         // Editable title for the material
         const materialTitleInput = document.createElement('input');
         materialTitleInput.type = 'text';
-        materialTitleInput.value = `Material ${materialIndex}`;
+        // If user had saved a name, show it:
+        materialTitleInput.value = matItem.name || `Material ${materialIndex + 1}`;
         materialTitleInput.classList.add('material-title-input');
     
         // Dropdown for selecting a material
@@ -497,31 +552,70 @@ document.addEventListener('DOMContentLoaded', function () {
             materialSelect.appendChild(option);
         });
 
-
+        // if (matItem.name) {  
+        //     materialSelect.value = matItem.name;  // <-- CRUCIAL
+        // }
+        // Then do the conditional
+    if (matItem.name) {
+        const fromExcelRow = materialsData.find(m => m["Name"] === matItem.name);
+        if (fromExcelRow) {
+            materialSelect.value = matItem.name; 
+        } else {
+            materialSelect.value = '';
+        }
+    }
     
         // When a material is selected, fill in the properties
         materialSelect.addEventListener('change', function() {
-            const selectedMaterialName = materialSelect.value;
-            const selectedMaterial = materialsData.find(material => material['Name'] === selectedMaterialName);
-            if (selectedMaterial) {
-                materialTitleInput.value = selectedMaterial['Name'];
+            const selectedName  = materialSelect.value;
+            const fromExcel = materialsData.find(m => m['Name'] === selectedName);
+            if (fromExcel) {
+                // copy fields from the Excel row
+                // e.g. matItem.name = fromExcel["Name"];
+                matItem.name = fromExcel["Name"];
+                fieldNames.forEach(field => {
+                    // Suppose matItem has the same property name
+                    // or you store it differently
+                    matItem[field] = fromExcel[field];
+                });
+
+                materialTitleInput.value = fromExcel["Name"];
+
+                // Also fill out the input fields below
                 fieldNames.forEach(fieldName => {
-                    const inputField = materialContainer.querySelector(`[data-field-name="${fieldName}"]`);
-                    if (inputField) {
-                        inputField.value = selectedMaterial[fieldName] || '';
+                    const inp = materialContainer.querySelector(`[data-field-name="${fieldName}"]`);
+                    if (inp) {
+                        inp.value = fromExcel[fieldName] || '';
                     }
                 });
             }
+            saveMaterialsToLocalStorage();
+            sendUpdatedMaterialsToPython();
+
         });
     
-        // Delete button for the material section
+        // Delete button
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.classList.add('delete-button');
-        deleteButton.addEventListener('click', function () {
+        
+        // STOP event from toggling arrow
+        deleteButton.addEventListener('click', function(e) {
+            e.stopPropagation();  // <<-- important so it won't also collapse/expand
+
+            // Remove from the DOM
             materialList.removeChild(materialContainer);
+            // Also remove from materialsList
+            materialsList.splice(materialIndex, 1);
+
+            // Re-save + notify Python
+            saveMaterialsToLocalStorage();
+            sendUpdatedMaterialsToPython();
+
+            // Also re-check global arrow if needed
+            updateGlobalArrowState();  // <<-- in case that was the last tray expanded
         });
-    
+   
         // Add elements to the header
         materialHeader.appendChild(materialTitleInput);
         materialHeader.appendChild(materialSelect);
@@ -530,7 +624,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Container for material properties
         const materialContent = document.createElement('div');
         materialContent.classList.add('material-content');
-   
     
         // Add inputs for each field in fieldNames
         fieldNames.forEach(function(fieldName) {
@@ -546,6 +639,16 @@ document.addEventListener('DOMContentLoaded', function () {
             inputField.placeholder = fieldName;
             inputField.classList.add('material-input');
             inputField.setAttribute('data-field-name', fieldName);
+
+            // If matItem already has a value for fieldName
+            inputField.value = matItem[fieldName] || '';
+
+            // On change, update matItem + push to Python
+            inputField.addEventListener('change', function() {
+                matItem[fieldName] = inputField.value;
+                saveMaterialsToLocalStorage();
+                sendUpdatedMaterialsToPython();
+            });
     
             inputContainer.appendChild(inputLabel);
             inputContainer.appendChild(inputField);
@@ -570,6 +673,24 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             return 'text';
         }
+    }
+
+    // Save & load user-chosen materials
+    function saveMaterialsToLocalStorage() {
+        localStorage.setItem('materialsList', JSON.stringify(materialsList));
+    }
+
+    function sendUpdatedMaterialsToPython() {
+        // Suppose you store materials in a structure similar to
+        //  { MatDict: { Materials: [ { name, family, e, ...}, ... ] } }
+        const matData = {
+            MatDict: {
+                Materials: materialsList // your list of user-chosen materials
+            }
+        };
+    
+        const matJson = JSON.stringify(matData);
+        window.location.href = "updatematerials:update?data=" + encodeURIComponent(matJson);
     }
 
     // Initialize tab event listeners

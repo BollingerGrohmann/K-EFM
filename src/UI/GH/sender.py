@@ -26,15 +26,6 @@ class MyComponent:
         # Get set of current element names from EFM
         current_element_names = {elem["name"] for elem in elements}
 
-        # if not elements:
-        #     # Remove all related components since elements list is empty
-        #     objects_to_remove = [obj for obj in gh_doc.Objects 
-        #                        if isinstance(obj, (Param_Brep, GH_NumberSlider))]
-        #     for obj in objects_to_remove:
-        #         gh_doc.RemoveObject(obj, False)
-        #     return []  # List is empty, no param/slider needed
-        
-        
         # Remove components for elements that no longer exist
         objects_to_remove = []
         for obj in gh_doc.Objects:
@@ -105,11 +96,6 @@ class MyComponent:
                 existing_nicknames.add(elem_name)
                 
                 sender_components.add(elem_name) 
-
-                # (Optional) To truly "internalize" geometry, you'd need to assign
-                # VolatileData in some advanced code. Typically, GH expects geometry
-                # to come via wires or external references rather than internal code.
-
 
             # --- B) GH_NumberSlider for the thickness ---
             slider_name = f"{elem_name}_Thickness"

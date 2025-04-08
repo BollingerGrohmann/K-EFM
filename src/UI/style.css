@@ -201,12 +201,7 @@ button.add-geo {
     background-color: #ffffff;
     margin-top: 10px;
     border-radius: 5px;
-    
-    /* Show by default */
-    /* display: block; */
-    /* max-height: none; */
-    /* no need to hide overflow if we’re showing everything */
-    /* overflow: visible;   */
+
 }
 
 /* Remove or merge the duplicate material-header rules and update to: */
@@ -293,10 +288,15 @@ button.add-geo {
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.9em;
+    margin-left: 10px;
+    z-index: 2; /* if needed */
+    position: relative; /* if needed */
 }
 
 .delete-button:hover {
-    background-color: #000000;
+    background: #ffffff;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
 }
 
 .toggle-button {
