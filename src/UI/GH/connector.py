@@ -147,6 +147,8 @@ class MyComponent:
                     else:
                         elements_list = []
 
+                    gh_doc.ExpireSolution()
+
                     # Convert the list of elements to JSON (but watch out if 'geometries' contains Rhino objects)
                     # For demonstration, let's ignore 'geometries' or store a placeholder
                     # A simple approach is to remove real geometry references before JSON:
@@ -212,6 +214,8 @@ class MyComponent:
                     slider_id, slider_value = value.split('=')
                     sc.sticky[slider_id] = float(slider_value)
                     schedule_recompute()
+                    refresh_sender()
+
 
                 if e.Uri.Scheme == "geometryupdate":
                     e.Cancel = True  # Prevent actual navigation
@@ -313,6 +317,7 @@ class MyComponent:
 
                             # schedule a recompute so GH updates
                             schedule_recompute()
+                            refresh_sender()
 
                     except Exception as ex:
                         print("Error updating elements (EFM):", ex)
