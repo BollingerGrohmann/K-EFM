@@ -384,6 +384,7 @@ class MyComponent:
 
                             # optionally:
                             schedule_recompute()
+                            refresh_sender()
 
                     except Exception as ex:
                         print("Error updating materials (EFM):", ex)

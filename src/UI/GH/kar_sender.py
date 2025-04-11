@@ -24,7 +24,7 @@ class MyComponent:
         EFM = sc.sticky.get("EFM", {})
 
         # We’ll keep track of which GH objects we created so we can remove them if needed
-        sender_components = sc.sticky.get("sender_components", set())
+        mat_sender_components = sc.sticky.get("mat_sender_components", set())
 
         # ---------- PART A: “Elements” the user already has -----------
         # (if you still need to do the geometry + slider logic)
@@ -42,7 +42,7 @@ class MyComponent:
         # 2B. Remove GH params for materials that no longer exist
         objects_to_remove = []
         for obj in gh_doc.Objects:
-            if obj.NickName in sender_components:
+            if obj.NickName in mat_sender_components:
                 # Suppose we named them EXACTLY the material’s name
                 # and we know they are Param_Material
                 # If that name is not in mat_names_set, remove it
@@ -52,7 +52,7 @@ class MyComponent:
                     objects_to_remove.append(obj)
 
         for obj in objects_to_remove:
-            sender_components.remove(obj.NickName)
+            mat_sender_components.remove(obj.NickName)
             gh_doc.RemoveObject(obj, False)
 
         # 2C. Check existing nicknames to avoid duplicates
@@ -89,7 +89,9 @@ class MyComponent:
             # Place it in the GH canvas
             yPos += y_spacing
             param_mat.Attributes.Pivot = PointF(xPos, yPos)
-
+            
+            if "Color" not in mat_data:
+                continue
             mat_color = mat_data["Color"]
             actual_karamba_mat = Karamba.Materials.FemMaterial_Isotrop(
                 mat_data.get("Family", f"Material_{i}"),
@@ -113,10 +115,10 @@ class MyComponent:
 
             gh_doc.AddObject(param_mat, False)
             existing_nicknames.add(mat_name)
-            sender_components.add(mat_name)
+            mat_sender_components.add(mat_name)
 
         # Save back the updated set
-        sc.sticky["sender_components"] = sender_components
+        sc.sticky["mat_sender_components"] = mat_sender_components
 
         # Force GH to finalize layout
         def on_solution_end(doc):
